@@ -1,7 +1,7 @@
 
-# Polly
+# Hermes
 
-Polly is a Discord bot built with Laracord for managing emotes, logging reactions, and tracking user statistics.
+Hermes is a Discord bot built with Laracord for managing emotes, logging reactions, and tracking user statistics.
 
 ## Features
 
@@ -12,7 +12,7 @@ Polly is a Discord bot built with Laracord for managing emotes, logging reaction
 
 ## Slash Commands
 
-Polly provides several slash commands for managing emotes and stats. Example commands:
+Hermes provides several slash commands for managing emotes and stats. Example commands:
 
 - `/emote add <name> <image>` — Add a new emote
 - `/emote stats <name>` — View emote usage stats
@@ -29,7 +29,7 @@ Polly provides several slash commands for managing emotes and stats. Example com
 	- Copy `.env.example` to `.env`
 	- Set at minimum:
 	  - `DISCORD_TOKEN=your_bot_token_here`
-	  - `APP_NAME=Polly`
+	  - `APP_NAME=Hermes`
 	  - `APP_ENV=development`
 3. Run migrations:
 	```bash

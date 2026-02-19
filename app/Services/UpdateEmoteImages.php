@@ -35,8 +35,8 @@ class UpdateEmoteImages extends Service
                 $client = new \GuzzleHttp\Client;
                 $response = $client->get($url);
                 if ($response->getStatusCode() === 200) {
-                    $imageData = $response->getBody()->getContents();
-                    $emote->image = $imageData;
+                    $stream = $response->getBody()->detach();
+                    $emote->image = $stream;
                     $emote->save();
                 }
             } catch (\Exception $e) {

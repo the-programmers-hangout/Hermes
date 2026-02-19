@@ -23,13 +23,12 @@ class UpdateEmoteImages extends Service
         }
 
         foreach ($guild->emojis as $emoji) {
-            $type = $emoji->animated ? 'ANIMATED' : 'STATIC';
-            $emote = \App\Models\Emote::where('emote_id', $emoji->id)->where('type', $type)->whereNull('image')->first();
+            $emote = \App\Models\Emote::where('emote_id', $emoji->id)->whereIn('type', ['ANIMATED', 'STATIC'])->whereNull('image')->first();
             if (! $emote) {
                 continue;
             }
 
-            $ext = $emoji->animated ? 'gif' : 'png';
+            $ext = $emote->type === 'ANIMATED' ? 'gif' : 'png';
             $url = "https://cdn.discordapp.com/emojis/{$emoji->id}.{$ext}";
 
             try {
@@ -41,6 +40,7 @@ class UpdateEmoteImages extends Service
                     $emote->save();
                 }
             } catch (\Exception $e) {
+                $this->console()->log("Failed to fetch image for emote ID {$emoji->id}: ".$e->getMessage());
             }
         }
     }

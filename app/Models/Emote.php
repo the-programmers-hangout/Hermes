@@ -11,6 +11,7 @@ class Emote extends Model
         'guild_id',
         'emote_name',
         'type',
+        'image',
     ];
 
     protected $casts = [

@@ -11,7 +11,7 @@ class UpdateEmoteImages extends Service
     /**
      * The service interval.
      */
-    protected int $interval = 5; // 10 minutes
+    protected int $interval = 600; // 10 minutes
 
     /**
      * Handle the service.

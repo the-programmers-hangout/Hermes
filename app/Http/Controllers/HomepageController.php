@@ -61,6 +61,8 @@ class HomepageController
             'top_movers' => $topMovers,
             'top_static' => $aggregate['top_static'] ?? collect(),
             'top_animated' => $aggregate['top_animated'] ?? collect(),
+            'bottom_static' => $aggregate['bottom_static'] ?? collect(),
+            'bottom_animated' => $aggregate['bottom_animated'] ?? collect(),
             'top_unicode' => $aggregate['top_unicode'] ?? collect(),
         ];
     }

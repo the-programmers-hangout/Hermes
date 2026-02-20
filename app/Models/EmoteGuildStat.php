@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BuildsEmoteAggregates;
+use App\Models\Concerns\BuildsEmoteUsageLists;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
 
 class EmoteGuildStat extends Model
 {
+    use BuildsEmoteAggregates;
+    use BuildsEmoteUsageLists;
+
     protected $fillable = [
         'emote_id',
         'guild_id',
@@ -27,24 +31,19 @@ class EmoteGuildStat extends Model
         );
     }
 
-    /**
-     * Build aggregate stats for all users.
-     */
     public static function dashboardAggregate(): array
     {
         $baseQuery = self::query()
             ->join('emotes', 'emote_guild_stats.emote_id', '=', 'emotes.emote_id');
 
-        $summary = (clone $baseQuery)
-            ->selectRaw('COALESCE(SUM(emote_guild_stats.usage_count), 0) as total_usage')
-            ->selectRaw('COUNT(DISTINCT emote_guild_stats.emote_id) as unique_emotes')
-            ->first();
+        $aggregate = self::aggregateSummaryAndUsageByType(
+            $baseQuery,
+            'emote_guild_stats.usage_count',
+            'emote_guild_stats.emote_id'
+        );
 
-        $usageByType = (clone $baseQuery)
-            ->select('emotes.type')
-            ->selectRaw('COALESCE(SUM(emote_guild_stats.usage_count), 0) as total_usage')
-            ->groupBy('emotes.type')
-            ->pluck('total_usage', 'type');
+        $summary = $aggregate['summary'];
+        $usageByType = $aggregate['usage_by_type'];
 
         $unicodeUsage = (int) EmoteLog::query()
             ->join('emotes', 'emote_logs.emote_id', '=', 'emotes.emote_id')
@@ -88,48 +87,35 @@ class EmoteGuildStat extends Model
                 'ANIMATED' => (int) ($usageByType->get('ANIMATED') ?? 0),
                 'UNICODE' => $unicodeUsage,
             ],
-            'top_static' => self::topEmotesByType(
+            'top_static' => self::emotesByType(
                 $baseQuery,
                 'STATIC',
                 'emote_guild_stats.usage_count',
-                'emote_guild_stats.emote_id'
+                'emote_guild_stats.emote_id',
+                'desc'
             ),
-            'top_animated' => self::topEmotesByType(
+            'top_animated' => self::emotesByType(
                 $baseQuery,
                 'ANIMATED',
                 'emote_guild_stats.usage_count',
-                'emote_guild_stats.emote_id'
+                'emote_guild_stats.emote_id',
+                'desc'
+            ),
+            'bottom_static' => self::emotesByType(
+                $baseQuery,
+                'STATIC',
+                'emote_guild_stats.usage_count',
+                'emote_guild_stats.emote_id',
+                'asc'
+            ),
+            'bottom_animated' => self::emotesByType(
+                $baseQuery,
+                'ANIMATED',
+                'emote_guild_stats.usage_count',
+                'emote_guild_stats.emote_id',
+                'asc'
             ),
             'top_unicode' => $topUnicode,
         ];
-    }
-
-    /**
-     * Build a top-10 emote list by type.
-     */
-    protected static function topEmotesByType(
-        $baseQuery,
-        string $type,
-        string $usageCountColumn,
-        string $emoteIdColumn
-    ): Collection {
-        return (clone $baseQuery)
-            ->where('emotes.type', $type)
-            ->select(
-                $emoteIdColumn.' as emote_id',
-                'emotes.emote_name',
-                'emotes.type',
-                'emotes.image'
-            )
-            ->selectRaw("COALESCE(SUM({$usageCountColumn}), 0) as total_usage")
-            ->groupBy(
-                $emoteIdColumn,
-                'emotes.emote_name',
-                'emotes.type',
-                'emotes.image'
-            )
-            ->orderByDesc('total_usage')
-            ->limit(10)
-            ->get();
     }
 }

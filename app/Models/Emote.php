@@ -17,6 +17,7 @@ class Emote extends Model
     protected $casts = [
         'emote_id' => 'string',
         'guild_id' => 'string',
+        'image' => 'string',
     ];
 
     public function logs()

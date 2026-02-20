@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Emote;
+use GuzzleHttp\Client;
 use Laracord\Services\Service;
 
 class UpdateEmoteImages extends Service
@@ -9,7 +11,7 @@ class UpdateEmoteImages extends Service
     /**
      * The service interval.
      */
-    protected int $interval = 600; // 10 minutes
+    protected int $interval = 5; // 10 minutes
 
     /**
      * Handle the service.
@@ -22,8 +24,14 @@ class UpdateEmoteImages extends Service
             return;
         }
 
+        $client = new Client;
+
         foreach ($guild->emojis as $emoji) {
-            $emote = \App\Models\Emote::where('emote_id', $emoji->id)->whereIn('type', ['ANIMATED', 'STATIC'])->whereNull('image')->first();
+            $emote = Emote::where('emote_id', $emoji->id)
+                ->whereIn('type', ['ANIMATED', 'STATIC'])
+                ->whereNull('image')
+                ->first();
+
             if (! $emote) {
                 continue;
             }
@@ -32,11 +40,15 @@ class UpdateEmoteImages extends Service
             $url = "https://cdn.discordapp.com/emojis/{$emoji->id}.{$ext}";
 
             try {
-                $client = new \GuzzleHttp\Client;
                 $response = $client->get($url);
                 if ($response->getStatusCode() === 200) {
-                    $stream = $response->getBody()->detach();
-                    $emote->image = $stream;
+                    $imageBinary = (string) $response->getBody();
+
+                    if ($imageBinary === '') {
+                        continue;
+                    }
+
+                    $emote->image = base64_encode($imageBinary);
                     $emote->save();
                 }
             } catch (\Exception $e) {

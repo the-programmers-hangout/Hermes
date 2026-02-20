@@ -6,7 +6,18 @@
       return $placeholderImage;
     }
 
-    $binary = (string) $image;
+    $value = (string) $image;
+
+    if (str_starts_with($value, 'data:image/')) {
+      return $value;
+    }
+
+    $binary = base64_decode($value, true);
+
+    if ($binary === false || $binary === '') {
+      return $placeholderImage;
+    }
+
     $mime = 'image/png';
 
     if (str_starts_with($binary, 'GIF8')) {
